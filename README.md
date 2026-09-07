@@ -209,7 +209,7 @@ Pic2word/
 `-- README.md
 ```
 
-Các bước dành cho giảng viên:
+
 
 1. Trên Google Drive, tải tệp `pic2word_data.zip` về thư mục `Downloads`.
 2. Mở Windows PowerShell tại thư mục gốc `Pic2word` (nơi có `README.md`).
