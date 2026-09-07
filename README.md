@@ -16,7 +16,7 @@ Có ba mức kiểm tra độc lập:
 
 1. **Kiểm tra code:** cài môi trường và chạy `pytest`; không cần dataset.
 2. **Demo ảnh tự chọn:** tải CLIP, thêm một ảnh truy vấn và một thư mục ảnh ứng viên.
-3. **Tính lại CIRR Recall:** cần chép dataset CIRR vào đúng cấu trúc ở mục 4.2.
+3. **Tính lại CIRR Recall:** cần chép dataset CIRR vào đúng cấu trúc ở mục 4.3.
 
 ## 1. Chạy nhanh để nghiệm thu
 
@@ -75,7 +75,7 @@ CIRR hiện có:
   --output reports\cirr_val_metrics_local_final_partial.json
 ```
 
-Lệnh này chỉ chạy sau khi đã đặt annotation và ảnh CIRR vào `data/cirr` theo mục 4.2.
+Lệnh này chỉ chạy sau khi đã đặt annotation và ảnh CIRR vào `data/cirr` theo mục 4.3.
 Dataset không nằm trong GitHub. Nếu chưa có dataset, cô vẫn có thể kiểm tra code bằng
 `pytest`, đọc báo cáo đã lưu và chạy demo ảnh tự chọn ở mục 2.
 
@@ -187,7 +187,71 @@ cuối là `0,549226`, giảm `57,10%`.
 
 ## 4. Chuẩn bị dữ liệu
 
-### 4.1. Dữ liệu CC3M dùng để train
+### 4.1. Cài gói dữ liệu ZIP từ Google Drive
+
+**Link dữ liệu Google Drive:** sinh viên điền liên kết chia sẻ tại đây trước khi nộp.
+
+Tệp chia sẻ nên được đặt tên là `pic2word_data.zip` và phải chứa nguyên thư mục
+`data`. Sau khi giải nén, cấu trúc tối thiểu để train phải giống như sau:
+
+```text
+Pic2word/
+|-- data/
+|   |-- cc/
+|   |   `-- Train_GCC-training_output.csv
+|   `-- cc_data/
+|       `-- train/
+|           |-- 000000000.jpg
+|           |-- 000000001.jpg
+|           `-- ...
+|-- configs/
+|-- scripts/
+`-- README.md
+```
+
+Các bước dành cho giảng viên:
+
+1. Trên Google Drive, tải tệp `pic2word_data.zip` về thư mục `Downloads`.
+2. Mở Windows PowerShell tại thư mục gốc `Pic2word` (nơi có `README.md`).
+3. Giải nén gói dữ liệu trực tiếp vào thư mục dự án:
+
+```powershell
+$zip = "$env:USERPROFILE\Downloads\pic2word_data.zip"
+Expand-Archive -LiteralPath $zip -DestinationPath . -Force
+```
+
+4. Kiểm tra đường dẫn và số lượng dữ liệu:
+
+```powershell
+Test-Path data\cc\Train_GCC-training_output.csv
+(Get-ChildItem data\cc_data\train -File | Where-Object Extension -In '.jpg','.jpeg','.png','.webp' | Measure-Object).Count
+(Import-Csv data\cc\Train_GCC-training_output.csv | Measure-Object).Count
+```
+
+Với gói dữ liệu dùng trong báo cáo, ba kết quả dự kiến lần lượt là `True`, `1000` và
+`1000`. Nếu xuất hiện đường dẫn `data\data\cc_data`, ZIP đã bị giải nén thừa một tầng;
+cần đặt thư mục `data` cùng cấp với `configs`, `scripts` và `README.md` như cây thư mục
+phía trên.
+
+5. Bắt đầu train:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\train.py `
+  --config configs\train_final_local.yaml `
+  --device cuda
+```
+
+Sau khi train xong, kiểm tra hai kết quả chính:
+
+```text
+checkpoints/local_final/pic2word/last.pt
+logs/local_final/pic2word/training_metrics.csv
+```
+
+Nếu máy không có GPU NVIDIA, đổi `--device cuda` thành `--device cpu`; quá trình sẽ
+chậm hơn. Tệp CIRR không bắt buộc để train: CIRR chỉ cần khi tính Recall ở mục 4.3.
+
+### 4.2. Dữ liệu CC3M dùng để train
 
 Pic2Word chỉ cần ảnh CC3M để train Mapping Network; caption và URL không được đưa vào
 loss. Manifest phải chứa một cột đường dẫn ảnh, ví dụ:
@@ -215,7 +279,7 @@ Nếu có một shard WebDataset, chuẩn bị tối đa 1.000 ảnh bằng:
 
 Script giữ nguyên TAR gốc, giải nén ảnh hợp lệ và tạo lại manifest.
 
-### 4.2. Dữ liệu CIRR dùng để đánh giá
+### 4.3. Dữ liệu CIRR dùng để đánh giá
 
 Cấu trúc yêu cầu:
 
