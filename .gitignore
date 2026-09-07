@@ -1,0 +1,40 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Local data and generated artifacts
+data/
+indexes/
+tmp/
+*.pt
+*.pth
+*.faiss
+
+# Local analysis caches
+.codegraph/
+.understand-anything/
+
+# Keep only the small trained Mapping Network needed by the README demo.
+checkpoints/*
+!checkpoints/local_final/
+checkpoints/local_final/*
+!checkpoints/local_final/pic2word/
+checkpoints/local_final/pic2word/*
+!checkpoints/local_final/pic2word/last.pt
+
+# Keep the compact training evidence, not arbitrary runtime logs.
+logs/*
+!logs/local_final/
+logs/local_final/*
+!logs/local_final/pic2word/
+logs/local_final/pic2word/*
+!logs/local_final/pic2word/training_metrics.csv
+!logs/local_final/pic2word/training_summary.json
+
+# Contains dead third-party URLs and is not needed to run the project.
+reports/cirr_url_download_failures.json

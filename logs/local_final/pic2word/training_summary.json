@@ -1,0 +1,18 @@
+{
+  "config": "C:\\Pic2word\\configs\\train_final_local.yaml",
+  "device": "cuda",
+  "epochs_completed": 2,
+  "global_step": 500,
+  "training_samples": 1000,
+  "batch_size": 2,
+  "elapsed_seconds": 200.45501119999972,
+  "last_metrics": {
+    "step": 500,
+    "total_loss": 0.25885009765625,
+    "image_to_text_loss": 0.26654052734375,
+    "text_to_image_loss": 0.25115966796875,
+    "learning_rate": 0.0001
+  },
+  "checkpoint": "C:\\Pic2word\\checkpoints\\local_final\\pic2word\\last.pt",
+  "metrics_csv": "C:\\Pic2word\\logs\\local_final\\pic2word\\training_metrics.csv"
+}
