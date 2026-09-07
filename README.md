@@ -6,12 +6,28 @@ mô tả thay đổi, sau đó tìm ảnh phù hợp nhất trong một kho ản
 
 > Pic2Word là mô hình **tìm kiếm ảnh**, không phải mô hình sinh hoặc chỉnh sửa ảnh.
 
+## Dành cho giảng viên
+
+Repo đã kèm source code, unit test, báo cáo thực nghiệm, log loss và checkpoint Mapping
+Network local 500 bước. Repo không kèm ảnh CC3M/CIRR, CLIP ViT-L/14 và candidate index
+vì các tệp này lớn hoặc có điều kiện phân phối riêng.
+
+Có ba mức kiểm tra độc lập:
+
+1. **Kiểm tra code:** cài môi trường và chạy `pytest`; không cần dataset.
+2. **Demo ảnh tự chọn:** tải CLIP, thêm một ảnh truy vấn và một thư mục ảnh ứng viên.
+3. **Tính lại CIRR Recall:** cần chép dataset CIRR vào đúng cấu trúc ở mục 4.2.
+
 ## 1. Chạy nhanh để nghiệm thu
 
-Các lệnh dưới đây dành cho Windows PowerShell và chạy từ thư mục dự án:
+Các lệnh dưới đây dành cho Windows PowerShell. Tải repo và cài môi trường:
 
 ```powershell
-cd C:\Pic2word
+git clone https://github.com/huylenhat1701-stack/Pic2word.git
+cd Pic2word
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
 ```
 
 ### 1.1. Kiểm tra môi trường và GPU
@@ -20,9 +36,8 @@ cd C:\Pic2word
 .\.venv\Scripts\python.exe -c "import torch; print('PyTorch:', torch.__version__); print('CUDA:', torch.cuda.is_available()); print('GPU:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU')"
 ```
 
-Kết quả đúng trên máy đã thiết lập phải có `CUDA: True`. Nếu máy không có GPU NVIDIA,
-có thể thay `--device cuda` trong các lệnh bên dưới bằng `--device cpu`, nhưng thời gian
-chạy sẽ lâu hơn.
+Nếu máy có GPU NVIDIA và PyTorch CUDA phù hợp, kết quả sẽ có `CUDA: True`. Nếu không,
+thay `--device cuda` trong các lệnh bên dưới bằng `--device cpu`.
 
 ### 1.2. Chạy bộ kiểm thử code
 
@@ -32,7 +47,20 @@ chạy sẽ lâu hơn.
 
 Kết quả hiện tại của dự án là `18 passed`.
 
-### 1.3. Đánh giá checkpoint đã train
+### 1.3. Tải CLIP cho demo hoặc đánh giá
+
+```powershell
+.\.venv\Scripts\python.exe scripts\download_clip.py --device auto
+```
+
+### 1.4. Kiểm tra kết quả thực nghiệm đã lưu
+
+Không cần dataset để đọc hai tệp bằng chứng đã commit:
+
+- `reports/pic2word_local_acceptance.md`: báo cáo nghiệm thu và bảng Recall.
+- `logs/local_final/pic2word/training_metrics.csv`: loss của toàn bộ quá trình train.
+
+### 1.5. Tính lại Recall bằng checkpoint đã train
 
 Không cần train lại. Lệnh sau nạp checkpoint 500 bước và tính Recall trên phần dữ liệu
 CIRR hiện có:
@@ -46,6 +74,10 @@ CIRR hiện có:
   --index-batch-size 1 `
   --output reports\cirr_val_metrics_local_final_partial.json
 ```
+
+Lệnh này chỉ chạy sau khi đã đặt annotation và ảnh CIRR vào `data/cirr` theo mục 4.2.
+Dataset không nằm trong GitHub. Nếu chưa có dataset, cô vẫn có thể kiểm tra code bằng
+`pytest`, đọc báo cáo đã lưu và chạy demo ảnh tự chọn ở mục 2.
 
 Kết quả tham chiếu của lần chạy đã hoàn thành:
 
@@ -224,25 +256,19 @@ Khi có đủ 2.297 ảnh, chạy nghiệm thu đầy đủ mà không dùng `--
   --output reports\cirr_val_metrics_local_final.json
 ```
 
-## 5. Cài đặt trên máy khác
+## 5. Nội dung có và không có trên GitHub
 
-Yêu cầu Python 3.11 hoặc 3.12. Từ thư mục dự án:
+| Thành phần | Có trong repo? | Ghi chú |
+|---|---:|---|
+| Source, cấu hình và unit test | Có | Chạy được ngay sau khi cài dependencies |
+| Mapping Network local 500 bước | Có | `checkpoints/local_final/pic2word/last.pt` |
+| Báo cáo Recall và log loss | Có | Dùng để kiểm tra kết quả thực nghiệm đã chạy |
+| OpenAI CLIP ViT-L/14 | Không | Tải bằng `scripts/download_clip.py` |
+| Ảnh CC3M và CIRR | Không | Dữ liệu lớn, đặt thủ công trong `data/` |
+| Candidate index | Không | Tự sinh ở lần retrieval/evaluation đầu tiên |
 
-```powershell
-py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
-.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
-```
-
-Nếu cần GPU NVIDIA, cài bản PyTorch CUDA tương thích với driver của máy trước khi cài
-dự án. Sau đó tải và kiểm tra CLIP:
-
-```powershell
-.\.venv\Scripts\python.exe scripts\download_clip.py --device cuda
-```
-
-Các checkpoint `.pt`, ảnh CC3M và ảnh CIRR không được tạo bởi `pip install`; cần sao
-chép kèm thư mục `checkpoints` và `data` khi chuyển dự án sang máy khác.
+Python hỗ trợ: 3.11 hoặc 3.12. Nếu muốn dùng GPU NVIDIA, cài PyTorch CUDA tương thích
+với driver của máy. CPU vẫn chạy được nhưng chậm hơn.
 
 ## 6. Kiến trúc và phạm vi
 
